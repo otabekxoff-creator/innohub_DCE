@@ -52,8 +52,9 @@ interface ChatMessage {
 }
 
 interface AIAction {
-  type: 'create_file' | 'edit_file' | 'delete_file' | 'run_command';
+  type: 'create_file' | 'edit_file' | 'delete_file' | 'run_command' | 'rename_file';
   filename?: string;
+  newName?: string;
   content?: string;
   command?: string;
   description: string;
@@ -1101,10 +1102,34 @@ export const AboutPage: React.FC = () => {
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    if (!this.currentFile) {
+      return { response: '❌ Avval faylni oching.', actions: [], codeBlocks: [] };
+    }
+    let code = this.currentFile.content;
+    let modified = false;
+
+    // Convert regular functions to arrow functions
+    if (/function\s+\w+\s*\(/.test(code)) {
+      code = code.replace(/function\s+(\w+)\s*\(([^)]*)\)\s*\{/g, 'const $1 = ($2) => {');
+      modified = true;
+    }
+    
+    // Convert string concatenation to template literals
+    if (/['"]\s*\+\s*\w+\s*\+\s*['"]/.test(code)) {
+      code = code.replace(/['"](.*?)['"]\s*\+\s*(\w+)\s*\+\s*['"](.*?)['"]/g, '`$1${$2}$3`');
+      modified = true;
+    }
+
     return {
-      response: '🔄 Refactor qilish uchun aniqroq ko\'rsatma bering.',
-      actions: [],
-      codeBlocks: []
+      response: modified 
+        ? `🔄 **${this.currentFile.name}** refactor qilindi!\n\n✓ Arrow funksiyalarga o'tkazildi\n✓ Zamonaviy ES6 sintaksisi qo'llanildi.`
+        : `✅ **${this.currentFile.name}** allaqachon yaxshi holatda, refactor shart emas.`,
+      actions: modified ? [{
+        type: 'edit_file',
+        content: code,
+        description: `Refactor ${this.currentFile.name}`
+      }] : [],
+      codeBlocks: modified ? [{ language: this.currentFile.language, code: code }] : []
     };
   }
 
@@ -1114,10 +1139,39 @@ export const AboutPage: React.FC = () => {
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    if (!this.currentFile) {
+      return { response: '❌ Avval faylni oching.', actions: [], codeBlocks: [] };
+    }
+    let code = this.currentFile.content;
+    let modified = false;
+
+    if (code.includes('any')) {
+      code = code.replace(/:\s*any/g, ': unknown');
+      modified = true;
+    }
+    
+    // Add type to arrow functions args implicitly
+    if (/const\s+\w+\s*=\s*\(\s*(\w+)\s*\)\s*=>/.test(code)) {
+       code = code.replace(/const\s+(\w+)\s*=\s*\(\s*(\w+)\s*\)\s*=>/g, 'const $1 = ($2: any) =>');
+       modified = true;
+    }
+
+    if (!code.includes('interface') && !code.includes('type ')) {
+       const interfaceName = this.currentFile.name.split('.')[0].replace(/[^a-zA-Z]/g, '') + 'Props';
+       code = `interface ${interfaceName} {\n  id?: string;\n  name?: string;\n}\n\n` + code;
+       modified = true;
+    }
+
     return {
-      response: '📝 Type qo\'shish uchun faylni oching.',
-      actions: [],
-      codeBlocks: []
+      response: modified
+        ? `📝 **${this.currentFile.name}** fayliga turlar (Typescript types/interfaces) qo'shildi!`
+        : `✅ Turlar allaqachon mavjud yoki qo'shishning imkoni yo'q.`,
+      actions: modified ? [{
+        type: 'edit_file',
+        content: code,
+        description: `Add types to ${this.currentFile.name}`
+      }] : [],
+      codeBlocks: modified ? [{ language: this.currentFile.language, code }] : []
     };
   }
 
@@ -1127,25 +1181,31 @@ export const AboutPage: React.FC = () => {
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    const filename = this.currentFile ? this.currentFile.name.split('.')[0] : 'example';
     const code = `import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+import { ${filename} } from '../${filename}';
 
-describe('Component', () => {
+describe('${filename} Component', () => {
   it('renders correctly', () => {
-    render(<div>Test</div>);
-    expect(screen.getByText('Test')).toBeInTheDocument();
+    render(<${filename} />);
+    expect(screen.getByRole('heading')).toBeInTheDocument();
+  });
+  
+  it('handles click events', () => {
+    // Add specific test logic
   });
 });`;
 
     return {
-      response: `✅ **Test** tayyor!\n\n📁 \`src/__tests__/example.test.tsx\``,
+      response: `✅ **Test fayli** tayyor!\n\n📁 \`src/__tests__/${filename}.test.tsx\``,
       actions: [{
         type: 'create_file',
-        filename: 'src/__tests__/example.test.tsx',
+        filename: `src/__tests__/${filename}.test.tsx`,
         content: code,
-        description: 'Create test file'
+        description: `Create ${filename}.test.tsx`
       }],
-      codeBlocks: [{ language: 'typescript', code, filename: 'example.test.tsx' }]
+      codeBlocks: [{ language: 'typescript', code, filename: `${filename}.test.tsx` }]
     };
   }
 
@@ -1157,8 +1217,8 @@ describe('Component', () => {
   } {
     return {
       response: pkg 
-        ? `📦 \`npm install ${pkg}\` bajarilsinmi?`
-        : 'Qaysi paketni o\'rnatishni xohlaysiz?',
+        ? `📦 Dasturni o'rnatmoqchiman. Terminalda \`npm install ${pkg}\` buyrug'i bajariladi.`
+        : 'Qaysi paketni o\'rnatishni xohlaysiz? Qaytadan kiriting (Masalan: npm install axios)',
       actions: pkg ? [{
         type: 'run_command',
         command: `npm install ${pkg}`,
@@ -1180,7 +1240,7 @@ describe('Component', () => {
     if (lower.includes('lint')) command = 'npm run lint';
 
     return {
-      response: `▶️ \`${command}\` bajarilsinmi?`,
+      response: `▶️ Dastur ishga tushirilmoqda: \`${command}\``,
       actions: [{
         type: 'run_command',
         command,
@@ -1199,40 +1259,109 @@ describe('Component', () => {
     const fileMatch = message.match(/(?:o'chir|delete|remove)\s+(\S+)/i);
     const filename = fileMatch?.[1];
 
+    if (filename) {
+       return {
+         response: `🗑️ **${filename}** muvaffaqiyatli o'chirildi!`,
+         actions: [{
+           type: 'delete_file',
+           filename,
+           description: `Delete ${filename}`
+         }],
+         codeBlocks: []
+       };
+    } else if (this.currentFile) {
+       return {
+         response: `🗑️ Joriy **${this.currentFile.name}** o'chirilmoqda.`,
+         actions: [{
+           type: 'delete_file',
+           filename: this.currentFile.name,
+           description: `Delete ${this.currentFile.name}`
+         }],
+         codeBlocks: []
+       };
+    }
+
     return {
-      response: filename 
-        ? `🗑️ **${filename}** o'chirilsinmi?`
-        : 'Qaysi faylni o\'chirishni xohlaysiz?',
-      actions: filename ? [{
-        type: 'delete_file',
-        filename,
-        description: `Delete ${filename}`
-      }] : [],
+      response: 'Qaysi faylni o\'chirishni xohlaysiz? Aniqroq yozing.',
+      actions: [],
       codeBlocks: []
     };
   }
 
   // ========== RENAME FILE ==========
-  private renameFile(_message: string): {
+  private renameFile(message: string): {
     response: string;
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    const match = message.match(/(?:nomla|qayta nomla|rename)\s+(\S+)\s+(?:ga|to)\s+(\S+)/i);
+    if (match) {
+       return {
+         response: `📝 Fayl nomi **${match[1]}** dan **${match[2]}** ga o'zgartirilmoqda.`,
+         actions: [{
+           type: 'rename_file',
+           filename: match[1],
+           newName: match[2],
+           description: `Rename ${match[1]} to ${match[2]}`
+         }],
+         codeBlocks: []
+       };
+    }
+    
+    if (this.currentFile) {
+       const newNameMatch = message.match(/(?:nomi|yangi nom)\s+(\S+)/i) || message.match(/rename\s+(?:to\s+)?(\S+)/i);
+       if (newNameMatch && newNameMatch[1]) {
+         return {
+           response: `📝 Joriy fayl nomini **${newNameMatch[1]}** ga o'zgartirmoqdaman.`,
+           actions: [{
+             type: 'rename_file',
+             filename: this.currentFile.name,
+             newName: newNameMatch[1],
+             description: `Rename to ${newNameMatch[1]}`
+           }],
+           codeBlocks: []
+         };
+       }
+    }
+
     return {
-      response: '📝 Faylni qayta nomlash uchun eski va yangi nomni ayting.',
+      response: '📝 Faylni qayta nomlash uchun eski va yangi nomni ayting. Masalan: "app.js ni main.js ga o\'zgartir" yoki faylni ochiq holda "yangi nom main.js" deng.',
       actions: [],
       codeBlocks: []
     };
   }
 
   // ========== SEARCH & REPLACE ==========
-  private searchReplace(_message: string): {
+  private searchReplace(message: string): {
     response: string;
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    if (!this.currentFile) {
+      return { response: '❌ Avval almashtirish kerak bo\'lgan faylni oching.', actions: [], codeBlocks: [] };
+    }
+    
+    // Matnni tirnoqlar orqali ushlash: 'a' ni 'b' ga yoki "a" bilan "b" ni
+    const match = message.match(/['"]([^'"]+)['"]\s*(?:ni|bilan|ga)\s*['"]([^'"]+)['"]/i);
+    
+    if (match) {
+      const searchStr = match[1];
+      const replaceStr = match[2];
+      const code = this.currentFile.content.split(searchStr).join(replaceStr);
+      
+      return {
+        response: `🔍 Quyidagi o'zgarishlar amalga oshirildi:\n**${searchStr}** so'zi **${replaceStr}** ga almashtirildi.`,
+        actions: [{
+          type: 'edit_file',
+          content: code,
+          description: `Replace ${searchStr} with ${replaceStr}`
+        }],
+        codeBlocks: [{ language: this.currentFile.language, code }]
+      };
+    }
+
     return {
-      response: '🔍 Nima almashtirishni xohlaysiz?',
+      response: '🔍 Qaysi matnni nimaga almashtirishni istaysiz? Masalan: "EskiMatn" ni "YangiMatn" ga almashtir.',
       actions: [],
       codeBlocks: []
     };
@@ -1245,7 +1374,7 @@ describe('Component', () => {
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
     return {
-      response: '✨ Kod formatlash - prettier ishlatiladi.',
+      response: '✨ Kod formati (Prettier orqali) tartiblanmoqda...',
       actions: [{
         type: 'run_command',
         command: 'npx prettier --write .',
@@ -1261,8 +1390,28 @@ describe('Component', () => {
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    if (!this.currentFile) {
+      return { response: '❌ Annotatsiya va kompyuter izohlarini qo\'shish uchun avval faylni oching.', actions: [], codeBlocks: [] };
+    }
+    let code = this.currentFile.content;
+    const isJS = ['typescript', 'javascript'].includes(this.currentFile.language);
+    
+    if (isJS) {
+       // Add JSDoc to functions gently
+       if (code.includes('function ') || code.includes('=>')) {
+           code = code.replace(/(export\s+)?(const|let|var)\s+(\w+)\s*=\s*(async\s+)?\([^)]*\)\s*=>/g, '\n/**\n * $3 xizmat funksiyasi.\n */\n$1$2 $3 = $4');
+           code = code.replace(/(export\s+)?function\s+(\w+)\s*\(/g, '\n/**\n * $2 asosiy funksiya.\n */\n$1function $2(');
+       }
+       
+       return {
+         response: `📝 **${this.currentFile.name}** fayliga batafsil dokumentatsiya (JSDoc izohlari) qo'shildi!`,
+         actions: [{ type: 'edit_file', content: code, description: 'Add code comments' }],
+         codeBlocks: [{ language: this.currentFile.language, code }]
+       };
+    }
+    
     return {
-      response: '📝 Comment qo\'shish uchun faylni oching.',
+      response: '📝 Comment qo\'shish uchun JS / TS / JSX turdagi faylni oching.',
       actions: [],
       codeBlocks: []
     };
@@ -1274,11 +1423,24 @@ describe('Component', () => {
     actions: AIAction[];
     codeBlocks: { language: string; code: string; filename?: string }[];
   } {
+    if (!this.currentFile) {
+      return { response: '❌ Tahrirlash uchun avval faylni oching.', actions: [], codeBlocks: [] };
+    }
+    
+    const toTS = lower.includes('ts') || lower.includes('typescript');
+    const newExt = toTS ? 'ts' : 'js';
+    const oldNameParts = this.currentFile.name.split('.');
+    oldNameParts.pop();
+    const newName = `${oldNameParts.join('.')}.${newExt}`;
+    
     return {
-      response: lower.includes('ts') 
-        ? '🔄 JavaScript → TypeScript o\'zgartirish'
-        : '🔄 TypeScript → JavaScript o\'zgartirish',
-      actions: [],
+      response: `🔄 **${this.currentFile.name}** fayli **${newName}** deb o'zgartirilmoqda.`,
+      actions: [{
+        type: 'rename_file',
+        filename: this.currentFile.name,
+        newName: newName,
+        description: `Convert to ${newExt}`
+      }],
       codeBlocks: []
     };
   }
@@ -1752,6 +1914,20 @@ const App: React.FC = () => {
       case 'delete_file':
         if (action.filename) {
           handleDeleteFile(action.filename);
+        }
+        break;
+      case 'rename_file':
+        if (action.filename && action.newName) {
+          const fileToRename = files.find(f => f.name === action.filename);
+          if (fileToRename) {
+            setFiles(prev => prev.map(f => f.id === fileToRename.id ? { ...f, name: action.newName!, isDirty: true } : f));
+            addTerminalLine('output', `✓ Renamed ${action.filename} to ${action.newName}`);
+            
+            // Re-select if tab is open
+            setTabs(prev => prev.map(t => t.fileId === fileToRename.id ? { ...t, isActive: t.isActive } : t));
+          } else {
+             addTerminalLine('error', `File not found: ${action.filename}`);
+          }
         }
         break;
       case 'run_command':
