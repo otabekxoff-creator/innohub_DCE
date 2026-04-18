@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Project root directory (where commands will be executed)
 const PROJECT_ROOT = path.join(__dirname, '..');

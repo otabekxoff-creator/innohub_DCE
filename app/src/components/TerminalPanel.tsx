@@ -7,7 +7,7 @@ interface TerminalPanelProps {
   onClose: () => void;
 }
 
-const WS_URL = 'ws://localhost:3001/terminal';
+const WS_URL = 'ws://localhost:3002/terminal';
 
 export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onTerminalSubmit, onClose }) => {
   const { 
