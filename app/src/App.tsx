@@ -11,7 +11,9 @@ import { ChatPanel } from './components/ChatPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
 
-import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box } from 'lucide-react';
+import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box, Play } from 'lucide-react';
+
+const WS_TERMINAL_URL = 'ws://localhost:3002/terminal';
 
 const App: React.FC = () => {
   const store = useAppStore();
@@ -234,6 +236,33 @@ const App: React.FC = () => {
           {activeFile?.isDirty && <span className="text-yellow-400 text-xs">●</span>}
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => {
+              if (!activeFile) return;
+              // Open terminal if closed
+              if (!showBottomPanel) setShowBottomPanel(true);
+              // Send run command via WebSocket
+              const ws = new WebSocket(WS_TERMINAL_URL);
+              ws.onopen = () => {
+                const ext = activeFile.name.split('.').pop();
+                let command = '';
+                if (ext === 'js' || ext === 'mjs') command = `node ${activeFile.name}`;
+                else if (ext === 'ts') command = `npx ts-node ${activeFile.name}`;
+                else if (ext === 'py') command = `python ${activeFile.name}`;
+                else if (ext === 'html') command = `start ${activeFile.name}`;
+                else command = `echo "Run command for ${activeFile.name}"`;
+                
+                ws.send(JSON.stringify({ type: 'command', command }));
+                addTerminalLine('output', `[Run] ${command}`);
+                ws.close();
+              };
+            }}
+            disabled={!activeFile}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${activeFile ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
+            title={activeFile ? `Run ${activeFile.name}` : 'No active file'}
+          >
+            <Play size={12} fill="currentColor" /> Run
+          </button>
           {isGithubConnected && <span className="text-xs text-gray-400 flex items-center gap-1"><Github size={12} /> @{githubUser?.login}</span>}
           <button onClick={() => setShowSettings(true)} className="p-1 hover:bg-[#2a2d2e] rounded"><Settings size={14} /></button>
         </div>
