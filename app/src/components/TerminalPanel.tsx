@@ -3,13 +3,12 @@ import { useAppStore } from '../store';
 import { Terminal, AlertCircle, Radio, List, X, Square } from 'lucide-react';
 
 interface TerminalPanelProps {
-  onTerminalSubmit: (command: string) => void;
   onClose: () => void;
 }
 
 const WS_URL = 'ws://localhost:3002/terminal';
 
-export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onTerminalSubmit, onClose }) => {
+export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onClose }) => {
   const { 
     bottomPanelTab, setBottomPanelTab, 
     bottomPanelHeight, addTerminalLine

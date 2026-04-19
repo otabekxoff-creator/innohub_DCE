@@ -38,7 +38,7 @@ const App: React.FC = () => {
     setRightPanelWidth,
     isGithubConnected, setIsGithubConnected,
     githubUser, setGithubUser, setGithubRepos,
-    setTerminalLines, addTerminalLine, setChatMessages,
+    addTerminalLine, setChatMessages,
     setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults,
     logout, authUser
   } = store;
@@ -180,25 +180,6 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
-
-  const handleTerminalSubmit = (terminalInput: string) => {
-    addTerminalLine('input', `$ ${terminalInput}`);
-    const command = terminalInput.trim().toLowerCase();
-    const args = terminalInput.trim().split(' ');
-    
-    if (command === 'help') addTerminalLine('output', `Commands: ls, pwd, cd, mkdir, rm, cat, touch, npm, git, github, ai, clear, exit`);
-    else if (command === 'clear') setTerminalLines([]);
-    else if (command === 'ls' || command === 'dir') addTerminalLine('output', files.filter(f => f.type === 'file').map(f => f.name).join('  '));
-    else if (command === 'pwd') addTerminalLine('output', '/home/user/project');
-    else if (command.startsWith('touch ')) handleCreateFile(args[1] || 'untitled.txt', '');
-    else if (command.startsWith('rm ')) handleDeleteFile(args[1]);
-    else if (command.startsWith('cat ')) addTerminalLine('output', files.find(f => f.name === args[1])?.content || `File not found: ${args[1]}`);
-    else if (command.startsWith('npm ')) { addTerminalLine('output', `Running: ${terminalInput}`); setTimeout(() => addTerminalLine('output', '✓ Done'), 1000); }
-    else if (command === 'github login') handleGitHubLogin();
-    else if (command === 'github push') { addTerminalLine('output', '⬆️ Pushing...'); setTimeout(() => addTerminalLine('output', '✓ Pushed'), 1000); }
-    else if (command === 'exit') setShowBottomPanel(false);
-    else addTerminalLine('error', `Command not found: ${terminalInput}`);
-  };
 
   const executeAction = (action: AIAction) => {
     switch (action.type) {
@@ -369,7 +350,6 @@ const App: React.FC = () => {
 
           {showBottomPanel && (
             <TerminalPanel
-              onTerminalSubmit={handleTerminalSubmit}
               onClose={() => setShowBottomPanel(false)}
             />
           )}
