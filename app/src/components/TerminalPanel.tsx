@@ -25,15 +25,18 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onTerminalSubmit, 
   useEffect(() => {
     if (bottomPanelTab !== 'terminal') return;
 
+    let isMounted = true;
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      if (!isMounted) return;
       setIsConnected(true);
       addTerminalLine('output', '[System] Real terminal connected');
     };
 
     ws.onmessage = (event) => {
+      if (!isMounted) return;
       const data = JSON.parse(event.data);
       
       switch (data.type) {
@@ -61,15 +64,18 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onTerminalSubmit, 
     };
 
     ws.onclose = () => {
+      if (!isMounted) return;
       setIsConnected(false);
       addTerminalLine('output', '[System] Terminal disconnected');
     };
 
     ws.onerror = (_err) => {
+      if (!isMounted) return;
       addTerminalLine('error', '[System] WebSocket error');
     };
 
     return () => {
+      isMounted = false;
       ws.close();
     };
   }, [bottomPanelTab]);
