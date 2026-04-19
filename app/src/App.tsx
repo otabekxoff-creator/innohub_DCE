@@ -10,7 +10,7 @@ import { TerminalPanel } from './components/TerminalPanel';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
-import { Login } from './components/Login';
+import { Welcome } from './components/Welcome';
 import { GitHubCallback } from './components/GitHubCallback';
 
 import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box, Play, X, LogOut } from 'lucide-react';
@@ -33,9 +33,9 @@ const App: React.FC = () => {
     return <GitHubCallback />;
   }
 
-  // Show login if not authenticated
+  // Show welcome page if not authenticated
   if (!isAuthenticated) {
-    return <Login />;
+    return <Welcome />;
   }
 
   const {
