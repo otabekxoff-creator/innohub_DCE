@@ -28,8 +28,27 @@ export const Login: React.FC = () => {
     }, 1000);
   };
 
+  // Check if GitHub OAuth is configured
+  const isGitHubConfigured = !!import.meta.env.VITE_GITHUB_CLIENT_ID && 
+                           import.meta.env.VITE_GITHUB_CLIENT_ID !== 'your_github_client_id';
+
   const handleSocialLogin = (provider: string) => {
     if (provider === 'github') {
+      // Check if GitHub OAuth is configured
+      const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+      if (!clientId || clientId === 'your_github_client_id') {
+        // Demo mode - simulate GitHub login
+        setIsLoading(true);
+        setTimeout(() => {
+          login({ 
+            email: 'demo@github.com', 
+            name: 'GitHub Demo User', 
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github'
+          });
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
       // Real GitHub OAuth
       githubAuth.login();
     } else {
@@ -232,10 +251,15 @@ export const Login: React.FC = () => {
               <button
                 onClick={() => handleSocialLogin('github')}
                 disabled={isLoading}
-                className="flex items-center justify-center gap-2 py-2.5 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg text-gray-300 hover:bg-[#1f1f1f] hover:border-[#3a3a3a] transition-all"
+                className="flex items-center justify-center gap-2 py-2.5 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg text-gray-300 hover:bg-[#1f1f1f] hover:border-[#3a3a3a] transition-all relative"
               >
                 <Github size={18} />
                 <span className="text-sm">GitHub</span>
+                {!isGitHubConfigured && (
+                  <span className="absolute -top-2 -right-2 px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">
+                    Demo
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => handleSocialLogin('google')}
@@ -256,6 +280,19 @@ export const Login: React.FC = () => {
             <button className="text-blue-400 hover:text-blue-300">Maxfiylik siyosati</button>
             {' '}ga rozilik bildirasiz
           </p>
+
+          {/* GitHub OAuth Setup Instructions */}
+          {!isGitHubConfigured && (
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-blue-400 text-xs text-center">
+                <strong>GitHub OAuth sozlash:</strong><br />
+                1. GitHub → Settings → Developer settings → OAuth Apps<br />
+                2. New OAuth App → Nom: INNOHUB IDE<br />
+                3. Callback URL: {window.location.origin}/auth/github/callback<br />
+                4. Client ID ni oling va Vercelga qo&apos;shing
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
