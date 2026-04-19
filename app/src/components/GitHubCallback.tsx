@@ -4,18 +4,19 @@ import { githubAuth } from '../lib/githubAuth';
 import { AlertCircle, CheckCircle, Github } from 'lucide-react';
 
 export const GitHubCallback: React.FC = () => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const urlParams = {
-    code: searchParams.get('code'),
-    state: searchParams.get('state'),
-    error: searchParams.get('error'),
-    error_description: searchParams.get('error_description')
-  };
   const { login, setGithubUser, setGithubRepos, setIsGithubConnected } = useAppStore();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlParams = {
+      code: searchParams.get('code'),
+      state: searchParams.get('state'),
+      error: searchParams.get('error'),
+      error_description: searchParams.get('error_description')
+    };
+    
     const handleCallback = async () => {
       console.log('GitHub Callback URL params:', urlParams);
 
@@ -80,7 +81,7 @@ export const GitHubCallback: React.FC = () => {
     };
 
     handleCallback();
-  }, [login, setGithubUser, setGithubRepos, setIsGithubConnected]);
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#16213e]">

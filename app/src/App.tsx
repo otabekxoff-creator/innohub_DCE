@@ -18,7 +18,7 @@ import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Bo
 const WS_TERMINAL_URL = 'ws://localhost:3002/terminal';
 
 const App: React.FC = () => {
-  const store = useAppStore();
+  // All hooks must be called before any conditional returns
   const [previewOutput, setPreviewOutput] = useState<string>('');
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -27,7 +27,22 @@ const App: React.FC = () => {
   const aiEngine = useMemo(() => new SuperAI(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { isAuthenticated } = store;
+  // Get store values - this must also be before conditional returns
+  const { 
+    isAuthenticated,
+    files, setFiles, tabs, setTabs,
+    activeSidebarIcon, setActiveSidebarIcon,
+    showBottomPanel, setShowBottomPanel,
+    showRightPanel, setShowRightPanel,
+    setShowSettings, setShowCommandPalette,
+    sidebarWidth, setSidebarWidth,
+    setRightPanelWidth,
+    isGithubConnected, setIsGithubConnected,
+    githubUser, setGithubUser, setGithubRepos,
+    addTerminalLine, setChatMessages,
+    setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults,
+    logout, authUser
+  } = useAppStore();
 
   // Check if we're on GitHub callback URL
   const isGitHubCallback = window.location.pathname.includes('auth/github/callback') ||
@@ -42,21 +57,6 @@ const App: React.FC = () => {
   if (!isAuthenticated) {
     return <Welcome />;
   }
-
-  const {
-    files, setFiles, tabs, setTabs,
-    activeSidebarIcon, setActiveSidebarIcon,
-    showBottomPanel, setShowBottomPanel,
-    showRightPanel, setShowRightPanel,
-    setShowSettings, setShowCommandPalette,
-    sidebarWidth, setSidebarWidth,
-    setRightPanelWidth,
-    isGithubConnected, setIsGithubConnected,
-    githubUser, setGithubUser, setGithubRepos,
-    addTerminalLine, setChatMessages,
-    setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults,
-    logout, authUser
-  } = store;
 
   const activeFile = files.find(f => f.id === tabs.find(t => t.isActive)?.fileId);
 
