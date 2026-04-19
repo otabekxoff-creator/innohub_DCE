@@ -11,6 +11,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { Login } from './components/Login';
+import { GitHubCallback } from './components/GitHubCallback';
 
 import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box, Play, X, LogOut } from 'lucide-react';
 
@@ -22,6 +23,15 @@ const App: React.FC = () => {
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const { isAuthenticated } = store;
+
+  // Check if we're on GitHub callback URL
+  const isGitHubCallback = window.location.pathname.includes('auth/github/callback') ||
+                           window.location.search.includes('code=');
+
+  // Show GitHub callback handler if on callback URL
+  if (isGitHubCallback) {
+    return <GitHubCallback />;
+  }
 
   // Show login if not authenticated
   if (!isAuthenticated) {

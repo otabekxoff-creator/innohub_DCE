@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store';
+import { githubAuth } from '../lib/githubAuth';
 import { Sparkles, Lock, Mail, Eye, EyeOff, Github, Chrome, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -28,15 +29,21 @@ export const Login: React.FC = () => {
   };
 
   const handleSocialLogin = (provider: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      login({ 
-        email: `user@${provider}.com`, 
-        name: `${provider} User`, 
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${provider}` 
-      });
-      setIsLoading(false);
-    }, 1000);
+    if (provider === 'github') {
+      // Real GitHub OAuth
+      githubAuth.login();
+    } else {
+      // Simulated login for other providers
+      setIsLoading(true);
+      setTimeout(() => {
+        login({ 
+          email: `user@${provider}.com`, 
+          name: `${provider} User`, 
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${provider}` 
+        });
+        setIsLoading(false);
+      }, 1000);
+    }
   };
 
   return (
