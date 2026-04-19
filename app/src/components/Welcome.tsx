@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../store';
 import { 
-  Sparkles, 
   Code2, 
   Terminal, 
   Zap, 
@@ -109,12 +108,6 @@ export const Welcome: React.FC = () => {
       {/* Hero Section */}
       <section className="relative z-10 px-6 pt-20 pb-16 text-center">
         <div className="max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-full mb-8 animate-bounce">
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-blue-300">Web-based Development Environment</span>
-          </div>
-
           {/* Main Title */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
             <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
