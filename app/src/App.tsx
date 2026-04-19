@@ -10,8 +10,9 @@ import { TerminalPanel } from './components/TerminalPanel';
 import { ChatPanel } from './components/ChatPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { CommandPalette } from './components/CommandPalette';
+import { Login } from './components/Login';
 
-import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box, Play, X } from 'lucide-react';
+import { Sparkles, GitBranch, Brain, Settings, Github, FileCode, Search, Bug, Box, Play, X, LogOut } from 'lucide-react';
 
 const WS_TERMINAL_URL = 'ws://localhost:3002/terminal';
 
@@ -20,6 +21,13 @@ const App: React.FC = () => {
   const [previewOutput, setPreviewOutput] = useState<string>('');
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const { isAuthenticated } = store;
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   const {
     files, setFiles, tabs, setTabs,
     activeSidebarIcon, setActiveSidebarIcon,
@@ -31,7 +39,8 @@ const App: React.FC = () => {
     isGithubConnected, setIsGithubConnected,
     githubUser, setGithubUser, setGithubRepos,
     setTerminalLines, addTerminalLine, setChatMessages,
-    setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults
+    setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults,
+    logout, authUser
   } = store;
 
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
@@ -301,7 +310,24 @@ const App: React.FC = () => {
             {isRunning ? 'Running...' : 'Run'}
           </button>
           {isGithubConnected && <span className="text-xs text-gray-400 flex items-center gap-1"><Github size={12} /> @{githubUser?.login}</span>}
+          {authUser && (
+            <div className="flex items-center gap-2 ml-2">
+              <img 
+                src={authUser.avatar} 
+                alt={authUser.name}
+                className="w-6 h-6 rounded-full border border-[#2a2a2a]"
+              />
+              <span className="text-xs text-gray-400 hidden sm:block">{authUser.name}</span>
+            </div>
+          )}
           <button onClick={() => setShowSettings(true)} className="p-1 hover:bg-[#2a2d2e] rounded"><Settings size={14} /></button>
+          <button 
+            onClick={logout} 
+            className="p-1 hover:bg-red-900/50 rounded text-gray-400 hover:text-red-400"
+            title="Chiqish"
+          >
+            <LogOut size={14} />
+          </button>
         </div>
       </div>
 

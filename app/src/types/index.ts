@@ -83,3 +83,17 @@ export interface Command {
   shortcut: string;
   action: () => void;
 }
+
+// ==================== AUTH TYPES ====================
+export interface AuthUser {
+  email: string;
+  name: string;
+  avatar: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: AuthUser | null;
+  login: (user: AuthUser) => void;
+  logout: () => void;
+}

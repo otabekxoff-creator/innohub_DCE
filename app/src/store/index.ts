@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FileItem, Tab, TerminalLine, ChatMessage, SidebarIcon, BottomPanelTab, GitHubUser, GitHubRepo } from '../types';
+import { FileItem, Tab, TerminalLine, ChatMessage, SidebarIcon, BottomPanelTab, GitHubUser, GitHubRepo, AuthUser } from '../types';
 
 export interface AppState {
   // Files and Tabs
@@ -61,6 +61,12 @@ export interface AppState {
   addFile: (file: FileItem) => void;
   updateFile: (id: string, updates: Partial<FileItem>) => void;
   deleteFile: (id: string) => void;
+
+  // Auth
+  isAuthenticated: boolean;
+  authUser: AuthUser | null;
+  login: (user: AuthUser) => void;
+  logout: () => void;
 }
 
 const initialFiles: FileItem[] = [
@@ -182,4 +188,10 @@ export const useAppStore = create<AppState>((set) => ({
     files: state.files.filter(f => f.id !== id),
     tabs: state.tabs.filter(t => t.fileId !== id)
   })),
+
+  // Auth
+  isAuthenticated: false,
+  authUser: null,
+  login: (user) => set({ isAuthenticated: true, authUser: user }),
+  logout: () => set({ isAuthenticated: false, authUser: null }),
 }));
