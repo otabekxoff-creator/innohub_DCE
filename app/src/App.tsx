@@ -22,6 +22,11 @@ const App: React.FC = () => {
   const [previewOutput, setPreviewOutput] = useState<string>('');
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [isResizingRight, setIsResizingRight] = useState(false);
+  const aiEngine = useMemo(() => new SuperAI(), []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const { isAuthenticated } = store;
 
   // Check if we're on GitHub callback URL
@@ -52,12 +57,6 @@ const App: React.FC = () => {
     setIsAiResponding, searchQuery, setSearchQuery, setSearchResults, searchResults,
     logout, authUser
   } = store;
-
-  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
-  const [isResizingRight, setIsResizingRight] = useState(false);
-
-  const aiEngine = useMemo(() => new SuperAI(), []);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeFile = files.find(f => f.id === tabs.find(t => t.isActive)?.fileId);
 
