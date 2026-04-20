@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAppStore } from '../store';
 import { githubAuth } from '../lib/githubAuth';
 import { AlertCircle, CheckCircle, Github } from 'lucide-react';
+import type { GitHubUser, GitHubRepo } from '../lib/githubAuth';
 
 export const GitHubCallback: React.FC = () => {
   const { login, setGithubUser, setGithubRepos, setIsGithubConnected } = useAppStore();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [error, setError] = useState('');
+  const processedRef = useRef(false);
 
-  useEffect(() => {
+  const handleCallback = useCallback(async () => {
     const searchParams = new URLSearchParams(window.location.search);
     const urlParams = {
       code: searchParams.get('code'),
@@ -16,8 +18,6 @@ export const GitHubCallback: React.FC = () => {
       error: searchParams.get('error'),
       error_description: searchParams.get('error_description')
     };
-    
-    const handleCallback = async () => {
       console.log('GitHub Callback URL params:', urlParams);
 
       if (urlParams.error) {
@@ -62,8 +62,8 @@ export const GitHubCallback: React.FC = () => {
         };
 
         login(authUser);
-        setGithubUser(user as any);
-        setGithubRepos(repos as any);
+        setGithubUser(user as GitHubUser);
+        setGithubRepos(repos as GitHubRepo[]);
         setIsGithubConnected(true);
 
         setStatus('success');
@@ -78,9 +78,15 @@ export const GitHubCallback: React.FC = () => {
         setStatus('error');
         setError('Kutilmagan xatolik yuz berdi');
       }
-    };
+  }, [login, setGithubRepos, setGithubUser, setIsGithubConnected]);
 
+  useEffect(() => {
+    // Prevent re-processing and avoid cascading renders
+    if (processedRef.current) return;
+    processedRef.current = true;
+    
     handleCallback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

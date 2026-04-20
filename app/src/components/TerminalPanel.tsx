@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../store';
 import { Terminal, AlertCircle, Radio, List, X, Square } from 'lucide-react';
+import type { BottomPanelTab } from '../types';
 
 interface TerminalPanelProps {
   onClose: () => void;
@@ -78,6 +79,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onClose }) => {
       isMounted = false;
       ws.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bottomPanelTab]);
 
   // Auto-scroll to bottom
@@ -118,7 +120,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({ onClose }) => {
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
-            onClick={() => setBottomPanelTab(id as any)}
+            onClick={() => setBottomPanelTab(id as BottomPanelTab)}
             className={`flex items-center gap-1 px-3 py-1.5 text-xs ${bottomPanelTab === id ? 'border-b-2 border-[#007acc] text-white' : 'text-gray-500'}`}
           >
             <Icon size={12} /> {label}

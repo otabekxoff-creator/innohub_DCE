@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { useAppStore } from './store';
 import { SuperAI } from './lib/SuperAI';
-import { AIAction, FileItem } from './types';
+import { AIAction, FileItem, SidebarIcon } from './types';
 import './App.css';
 
 import { FileExplorer } from './components/FileExplorer';
@@ -125,7 +125,7 @@ const App: React.FC = () => {
     const newFileId = `file-${Date.now()}`;
     const ext = filename.split('.').pop()?.toLowerCase() || '';
     const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', py: 'python', html: 'html', css: 'css', json: 'json', md: 'markdown' };
-    const newFile: FileItem = { id: newFileId, name: filename.split('/').pop() || filename, content, language: (langMap[ext] || 'plaintext') as any, type: 'file', parentId: 'src', lastModified: Date.now(), isDirty: true };
+    const newFile: FileItem = { id: newFileId, name: filename.split('/').pop() || filename, content, language: (langMap[ext] || 'plaintext') as FileItem['language'], type: 'file', parentId: 'src', lastModified: Date.now(), isDirty: true };
     setFiles(prev => prev.map(f => f.id === 'src' ? { ...f, children: [...(f.children || []), newFileId] } : f).concat(newFile));
     setTabs(prev => [...prev.map(t => ({ ...t, isActive: false })), { fileId: newFileId, isActive: true }]);
     addTerminalLine('output', `✓ Created ${filename}`);
@@ -190,6 +190,7 @@ const App: React.FC = () => {
       addTerminalLine('output', '✓ Connected to GitHub');
       window.history.replaceState({}, '', window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const executeAction = (action: AIAction) => {
@@ -220,7 +221,7 @@ const App: React.FC = () => {
     setIsAiResponding(false);
   };
 
-  const sidebarIcons = [
+  const sidebarIcons: { id: SidebarIcon; icon: typeof FileCode; label: string }[] = [
     { id: 'explorer', icon: FileCode, label: 'Explorer' },
     { id: 'search', icon: Search, label: 'Search' },
     { id: 'git', icon: GitBranch, label: 'Source Control' },
@@ -268,7 +269,6 @@ const App: React.FC = () => {
                 
                 // Endi WebSocket orqali ishga tushirish
                 const ws = new WebSocket(WS_TERMINAL_URL);
-                let output = '';
                 
                 ws.onopen = () => {
                   const ext = activeFile.name.split('.').pop();
@@ -294,7 +294,6 @@ const App: React.FC = () => {
                 ws.onmessage = (event) => {
                   const data = JSON.parse(event.data);
                   if (data.type === 'stdout' || data.type === 'stderr') {
-                    output += data.data;
                     setPreviewOutput(prev => prev + data.data);
                   } else if (data.type === 'exit') {
                     setIsRunning(false);
@@ -351,7 +350,7 @@ const App: React.FC = () => {
         {/* Left Icon Sidebar */}
         <div className="w-12 bg-[#181818] border-r border-[#2b2b2b] flex flex-col items-center py-2 gap-1">
           {sidebarIcons.map(({ id, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveSidebarIcon(id as any)} className={`w-10 h-10 flex items-center justify-center rounded hover:bg-[#2a2d2e] ${activeSidebarIcon === id ? 'border-l-2 border-white bg-[#2a2d2e]' : ''}`}>
+            <button key={id} onClick={() => setActiveSidebarIcon(id)} className={`w-10 h-10 flex items-center justify-center rounded hover:bg-[#2a2d2e] ${activeSidebarIcon === id ? 'border-l-2 border-white bg-[#2a2d2e]' : ''}`}>
               <Icon size={22} className={activeSidebarIcon === id ? 'text-white' : 'text-gray-500'} />
             </button>
           ))}
@@ -438,7 +437,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <input ref={fileInputRef} type="file" multiple onChange={handleFileUpload as any} className="hidden" />
+      <input ref={fileInputRef} type="file" multiple onChange={handleFileUpload as React.ChangeEventHandler<HTMLInputElement>} className="hidden" />
 
       <CommandPalette onNewFile={handleNewFile} onSaveFile={handleSaveFile} onGitHubLogin={handleGitHubLogin} />
       <SettingsModal />

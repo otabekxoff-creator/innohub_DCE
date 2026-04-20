@@ -89,6 +89,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = React.memo(({
   onGitHubPull,
   fileInputRef,
 }) => {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const renderFileTree = useCallback((parentId: string | null, level: number = 0) => {
     const children = files.filter(f => f.parentId === parentId);
     return children.map(file => (

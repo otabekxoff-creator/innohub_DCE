@@ -69,9 +69,10 @@ Joriy fayl ichidagi kod: ${this.currentFile?.content || "Yo'q"}`;
         codeBlocks: result.codeBlocks || []
       };
 
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       return {
-        response: `❌ **LLM integratsiyasida xatolik yuz berdi:**\n\n\`${err.message}\`\n\nAPI kalit to'g'riligini va internet aloqasini tekshiring.`,
+        response: `❌ **LLM integratsiyasida xatolik yuz berdi:**\n\n\`${errorMessage}\`\n\nAPI kalit to'g'riligini va internet aloqasini tekshiring.`,
         actions: [],
         codeBlocks: []
       };
